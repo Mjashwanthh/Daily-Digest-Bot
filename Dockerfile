@@ -11,12 +11,17 @@ RUN apt-get update \
 # 3. Install the Ollama CLI via its official installer script
 RUN curl -sSfL https://ollama.com/install.sh | sh
 
-# 4. Start the Ollama server in "daemon" mode, wait for it, pull llama3, then stop it
-#    This ensures that "ollama pull llama3" can connect to a running Ollama server.
-RUN ollama serve --daemon \
-    && sleep 10 \
-    && ollama pull llama3 \
-    && ollama stop
+# 4. Start the Ollama server in the background, wait, pull llama3, then stop it
+#    - ollama serve &       → runs Ollama in the background
+#    - pid=$!               → captures the background PID
+#    - sleep 10             → give the server 10 seconds to start
+#    - ollama pull llama3   → download the model
+#    - kill $pid            → stop the Ollama server
+RUN ollama serve & \
+    pid=$! && \
+    sleep 10 && \
+    ollama pull llama3 && \
+    kill $pid
 
 # 5. Create and switch to /app directory for our code
 WORKDIR /app
